@@ -79,13 +79,14 @@ sudo apt-mark hold kubelet kubeadm kubectl
 - Init master node:
 
 ```yml
-kubeadm init --apiserver-advertise-address=<IP_node_master> --pod-network-cidr=192.168.0.0/16
+sudo kubeadm init --apiserver-advertise-address=<IP_node_master> --pod-network-cidr=192.168.0.0/16
 ```
 
 > Should save the command `kubectl join <IP_node_master>:6443 --token...` appeared in output after running the above command. It's responsible for helping other nodes to join the cluster.
 
 **NOTE**: If you get the error after execute `kubeadm init` command like:
 
+ERROR 1:
 ```yml
 k8s@master-node:~$ sudo kubeadm init --apiserver-advertise-address=192.168.122.92 --pod-network-cidr=192.168.0.0/16 --ignore-preflight-errors=...
 [init] Using Kubernetes version: v1.28.2
@@ -100,13 +101,31 @@ To see the stack trace of this error execute with --v=5 or higher
 **Solution:**
 
 ```yml
-rm /etc/containerd/config.toml
+sudo rm /etc/containerd/config.toml
 -------------------------------------------------------------------------------------------------------
-systemctl restart containerd
+sudo systemctl restart containerd
 -------------------------------------------------------------------------------------------------------
-kubeadm init --apiserver-advertise-address=<IP_node_master> --pod-network-cidr=192.168.0.0/16
+sudo kubeadm init --apiserver-advertise-address=<IP_node_master> --pod-network-cidr=192.168.0.0/16
 ```
 
+ERROR 2:
+```yml
+cloud@master203:~$ sudo kubeadm init --apiserver-advertise-address=192.168.180.203 --pod-network-cidr=192.168.0.0/16
+I0131 03:16:41.017553    3145 version.go:256] remote version is much newer: v1.32.1; falling back to: stable-1.28
+[init] Using Kubernetes version: v1.28.15
+[preflight] Running pre-flight checks
+error execution phase preflight: [preflight] Some fatal errors occurred:
+	[ERROR FileContent--proc-sys-net-bridge-bridge-nf-call-iptables]: /proc/sys/net/bridge/bridge-nf-call-iptables does not exist
+[preflight] If you know what you are doing, you can make a check non-fatal with `--ignore-preflight-errors=...`
+To see the stack trace of this error execute with --v=5 or higher
+```
+
+**Solution:**
+
+```yml
+# REF: https://discuss.kubernetes.io/t/kubeadmin-join-throws-this-error-proc-sys-net-bridge-bridge-nf-call-iptables-does-not-exist/24855
+sudo modprobe br_netfilter
+```
 **Result:**
 
 ```yml
